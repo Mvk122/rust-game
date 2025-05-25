@@ -1,6 +1,6 @@
-use crate::movement_system::{Velocity};
+use crate::movement_system::{BoundingBox, GravityAffected, Physics, Velocity};
 use bevy::app::{App, Plugin};
-use bevy::asset::Assets;
+use bevy::asset::{AssetContainer, Assets};
 use bevy::color::Color;
 use bevy::input::ButtonInput;
 use bevy::math::Vec3;
@@ -34,6 +34,10 @@ fn spawn_player(
             Transform::from_xyz(0.0, 0.5, 0.0),
         ))
         .insert(Player)
+        .insert(GravityAffected)
+        .insert(Physics {
+            bounding_box: BoundingBox::Cube(Vec3::new(1.0, 1.0, 1.0)),
+        })
         .insert(Velocity(Vec3::new(0., 0., 0.)));
 }
 
@@ -57,8 +61,8 @@ fn player_keyboard_event_system(
             0.
         };
 
-        if kb.pressed(KeyCode::Space) {
-            velocity.0.y += 20.;
+        if kb.just_pressed(KeyCode::Space) {
+            velocity.0.y += 7.;
         }
     }
 }

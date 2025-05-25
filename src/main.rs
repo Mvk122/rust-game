@@ -3,7 +3,7 @@ mod movement_system;
 mod player;
 
 use crate::movement_system::MovementSystemPlugin;
-use crate::player::{PlayerPlugin};
+use crate::player::PlayerPlugin;
 use bevy::prelude::*;
 
 const BASE_SPEED: f32 = 500.;
