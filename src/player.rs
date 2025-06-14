@@ -9,15 +9,24 @@ use bevy::prelude::{
     Commands, Component, Cuboid, KeyCode, Mesh, Mesh3d, Query, Res, ResMut, Startup, Transform,
     Update, With,
 };
+use crate::bounding::GroundCollision;
 
 pub struct PlayerPlugin;
 
 #[derive(Component)]
-pub struct Player;
+pub struct Player {
+    pub jump_system: JumpSystem
+}
+
+pub struct JumpSystem {
+    pub max_jumps: u8,
+    pub jumps_remaining: u8
+}
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, spawn_player)
+            .add_systems(Update, jump_system)
             .add_systems(Update, player_keyboard_event_system);
     }
 }
@@ -33,7 +42,7 @@ fn spawn_player(
             MeshMaterial3d(materials.add(Color::srgb_u8(124, 144, 255))),
             Transform::from_xyz(0.0, 0.5, 0.0),
         ))
-        .insert(Player)
+        .insert(Player { jump_system: JumpSystem {max_jumps: 2, jumps_remaining: 2} })
         .insert(GravityAffected)
         .insert(Physics {
             bounding_box: BoundingBox::Cube(Vec3::new(1.0, 1.0, 1.0)),
@@ -43,9 +52,9 @@ fn spawn_player(
 
 fn player_keyboard_event_system(
     kb: Res<ButtonInput<KeyCode>>,
-    mut query: Query<&mut Velocity, With<Player>>,
+    mut query: Query<(&mut Velocity, &mut Transform, &mut Player), With<Player>>,
 ) {
-    if let Ok(mut velocity) = query.get_single_mut() {
+    if let Ok((mut velocity, mut transform, mut player)) = query.get_single_mut() {
         velocity.0.x = if kb.pressed(KeyCode::KeyD) {
             1.
         } else if kb.pressed(KeyCode::KeyA) {
@@ -61,8 +70,21 @@ fn player_keyboard_event_system(
             0.
         };
 
-        if kb.just_pressed(KeyCode::Space) {
-            velocity.0.y += 7.;
+        if kb.just_pressed(KeyCode::Space) && player.jump_system.jumps_remaining > 0 {
+            player.jump_system.jumps_remaining -= 1;
+            velocity.0.y += 5.;
         }
     }
 }
+
+fn jump_system(
+    mut query: Query<(&mut Player, &Physics, &Transform)>,
+) {
+    for (mut player, physics, transform) in &mut query {
+        if (physics.bounding_box.object_is_grounded(transform)) {
+            player.jump_system.jumps_remaining = player.jump_system.max_jumps;
+        }
+    }
+    
+}
+    

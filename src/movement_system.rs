@@ -2,6 +2,7 @@ use crate::constants::{GAME_SPEED, GRAVITY};
 use bevy::app::{App, Plugin};
 use bevy::math::Vec3;
 use bevy::prelude::{Component, Query, Res, Time, Transform, Update, With};
+pub(crate) use crate::bounding::{BoundingBox, GroundCollision};
 
 pub struct MovementSystemPlugin;
 
@@ -12,9 +13,7 @@ pub struct Velocity(pub(crate) Vec3);
 #[derive(Component)]
 pub struct GravityAffected;
 
-pub enum BoundingBox {
-    Cube(Vec3),
-}
+
 
 #[derive(Component)]
 pub struct Physics {
@@ -35,14 +34,14 @@ fn apply_gravity(
     let delta = time.delta_secs();
 
     for (mut velocity, mut transform, physics) in &mut query {
-        let bottom_y_level = object_bottom_y_world_coord(&physics.bounding_box, &transform);
+        let bottom_y_level = &physics.bounding_box.object_bottom_y_world_coord( &transform);
 
-        if bottom_y_level > 0. {
+        if *bottom_y_level > 0. {
             velocity.0 += Vec3::new(0.0, -GRAVITY * delta * GAME_SPEED, 0.0);
         }
 
-        if bottom_y_level < 0. {
-            transform.translation.y = object_on_ground_y_world_coord(&physics.bounding_box);
+        if *bottom_y_level < 0. {
+            transform.translation.y = *&physics.bounding_box.object_on_ground_y_world_coord();
             velocity.0.y = 0.
         }
     }
@@ -56,14 +55,4 @@ fn apply_velocity(mut query: Query<(&Velocity, &mut Transform)>, time: Res<Time>
     }
 }
 
-fn object_bottom_y_world_coord(bounding_box: &BoundingBox, transform: &Transform) -> f32 {
-    match bounding_box {
-        BoundingBox::Cube(vector) => transform.translation.y - (vector.y / 2.),
-    }
-}
 
-fn object_on_ground_y_world_coord(bounding_box: &BoundingBox) -> f32 {
-    match bounding_box {
-        BoundingBox::Cube(vector) => vector.y / 2.,
-    }
-}
