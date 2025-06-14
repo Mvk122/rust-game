@@ -1,6 +1,7 @@
+use crate::bounding::GroundCollision;
 use crate::movement_system::{BoundingBox, GravityAffected, Physics, Velocity};
 use bevy::app::{App, Plugin};
-use bevy::asset::{AssetContainer, Assets};
+use bevy::asset::Assets;
 use bevy::color::Color;
 use bevy::input::ButtonInput;
 use bevy::math::Vec3;
@@ -9,18 +10,17 @@ use bevy::prelude::{
     Commands, Component, Cuboid, KeyCode, Mesh, Mesh3d, Query, Res, ResMut, Startup, Transform,
     Update, With,
 };
-use crate::bounding::GroundCollision;
 
 pub struct PlayerPlugin;
 
 #[derive(Component)]
 pub struct Player {
-    pub jump_system: JumpSystem
+    pub jump_system: JumpSystem,
 }
 
 pub struct JumpSystem {
     pub max_jumps: u8,
-    pub jumps_remaining: u8
+    pub jumps_remaining: u8,
 }
 
 impl Plugin for PlayerPlugin {
@@ -42,7 +42,12 @@ fn spawn_player(
             MeshMaterial3d(materials.add(Color::srgb_u8(124, 144, 255))),
             Transform::from_xyz(0.0, 0.5, 0.0),
         ))
-        .insert(Player { jump_system: JumpSystem {max_jumps: 2, jumps_remaining: 2} })
+        .insert(Player {
+            jump_system: JumpSystem {
+                max_jumps: 2,
+                jumps_remaining: 2,
+            },
+        })
         .insert(GravityAffected)
         .insert(Physics {
             bounding_box: BoundingBox::Cube(Vec3::new(1.0, 1.0, 1.0)),
@@ -72,19 +77,15 @@ fn player_keyboard_event_system(
 
         if kb.just_pressed(KeyCode::Space) && player.jump_system.jumps_remaining > 0 {
             player.jump_system.jumps_remaining -= 1;
-            velocity.0.y += 5.;
+            velocity.0.y = 5.;
         }
     }
 }
 
-fn jump_system(
-    mut query: Query<(&mut Player, &Physics, &Transform)>,
-) {
+fn jump_system(mut query: Query<(&mut Player, &Physics, &Transform)>) {
     for (mut player, physics, transform) in &mut query {
         if (physics.bounding_box.object_is_grounded(transform)) {
             player.jump_system.jumps_remaining = player.jump_system.max_jumps;
         }
     }
-    
 }
-    

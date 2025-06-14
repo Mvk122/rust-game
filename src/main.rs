@@ -1,7 +1,7 @@
+mod bounding;
 mod constants;
 mod movement_system;
 mod player;
-mod bounding;
 
 use crate::movement_system::MovementSystemPlugin;
 use crate::player::PlayerPlugin;
