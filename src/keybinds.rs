@@ -12,7 +12,7 @@ pub struct KeyBinds {
     pub primary_click: MouseButton,
     pub secondary_click: MouseButton,
     pub vertical_sensitivity: f32,
-    pub horizontal_sensitivity: f32
+    pub horizontal_sensitivity: f32,
 }
 
 impl Default for KeyBinds {
@@ -27,7 +27,7 @@ impl Default for KeyBinds {
             primary_click: MouseButton::Left,
             secondary_click: MouseButton::Right,
             vertical_sensitivity: 0.05,
-            horizontal_sensitivity: 0.05
+            horizontal_sensitivity: 0.05,
         }
     }
 }

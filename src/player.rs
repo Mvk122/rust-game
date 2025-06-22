@@ -1,17 +1,20 @@
-use std::f32::consts::{FRAC_PI_2, TAU};
 use crate::bounding::GroundCollision;
 use crate::keybinds::KeyBinds;
 use crate::movement_system::{BoundingBox, GravityAffected, Physics, Velocity};
+use crate::utils::is_window_grabbed;
 use bevy::app::{App, Plugin};
 use bevy::asset::Assets;
 use bevy::color::Color;
-use bevy::input::ButtonInput;
 use bevy::input::mouse::MouseMotion;
+use bevy::input::ButtonInput;
 use bevy::math::{Isometry3d, Quat, Vec2, Vec3};
 use bevy::pbr::{MeshMaterial3d, StandardMaterial};
-use bevy::prelude::{Camera3d, Commands, Component, Cuboid, EventReader, IntoSystemConfigs, KeyCode, Mesh, Mesh3d, Query, Res, ResMut, Startup, Transform, Update, Window, With, Without};
+use bevy::prelude::{
+    Camera3d, Commands, Component, Cuboid, EventReader, IntoSystemConfigs, KeyCode, Mesh, Mesh3d,
+    Query, Res, ResMut, Startup, Transform, Update, Window, With, Without,
+};
 use bevy::window::PrimaryWindow;
-use crate::utils::is_window_grabbed;
+use std::f32::consts::{FRAC_PI_2, TAU};
 
 pub struct PlayerPlugin;
 
@@ -143,10 +146,14 @@ fn jump_system(mut query: Query<(&mut Player, &Physics, &Transform)>) {
     }
 }
 
-fn adjust_camera_rotation(camera: &mut PlayerCamera, motion: Vec2, vertical_sensitivity: f32, horizontal_sensitivity: f32) {
+fn adjust_camera_rotation(
+    camera: &mut PlayerCamera,
+    motion: Vec2,
+    vertical_sensitivity: f32,
+    horizontal_sensitivity: f32,
+) {
     camera.yaw = camera.yaw - motion.x * horizontal_sensitivity;
-    camera.pitch = (camera.pitch - motion.y * vertical_sensitivity)
-        .clamp(-FRAC_PI_2, FRAC_PI_2);
+    camera.pitch = (camera.pitch - motion.y * vertical_sensitivity).clamp(-FRAC_PI_2, FRAC_PI_2);
     println!("{}", camera.pitch);
 }
 
@@ -155,16 +162,28 @@ fn camera_movement_system(
     keybinds: Res<KeyBinds>,
     window_query: Query<&Window, With<PrimaryWindow>>,
     player_query: Query<&Transform, (With<Player>, Without<PlayerCamera>)>,
-    mut camera_query: Query<(&mut Transform, &mut PlayerCamera), (With<PlayerCamera>, Without<Player>)>,
+    mut camera_query: Query<
+        (&mut Transform, &mut PlayerCamera),
+        (With<PlayerCamera>, Without<Player>),
+    >,
 ) {
-    if let (Ok(window), Ok(player_transform), Ok((mut camera_transform, mut camera))) =
-        (window_query.get_single(), player_query.get_single(), camera_query.get_single_mut())
-    {
+    if let (Ok(window), Ok(player_transform), Ok((mut camera_transform, mut camera))) = (
+        window_query.get_single(),
+        player_query.get_single(),
+        camera_query.get_single_mut(),
+    ) {
         if is_window_grabbed(window) {
-            let total_mouse_motion = mouse_motion.read().fold(Vec2::ZERO, |acc, ev| acc + ev.delta);
-            adjust_camera_rotation(camera.as_mut(), total_mouse_motion, keybinds.vertical_sensitivity, keybinds.horizontal_sensitivity);
+            let total_mouse_motion = mouse_motion
+                .read()
+                .fold(Vec2::ZERO, |acc, ev| acc + ev.delta);
+            adjust_camera_rotation(
+                camera.as_mut(),
+                total_mouse_motion,
+                keybinds.vertical_sensitivity,
+                keybinds.horizontal_sensitivity,
+            );
         }
-        
+
         let target_pos = camera.get_orbit_translation(&player_transform.translation);
         camera_transform.translation = camera_transform
             .translation
