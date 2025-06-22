@@ -1,8 +1,13 @@
 mod bounding;
 mod constants;
+mod cursor_control;
+mod keybinds;
 mod movement_system;
 mod player;
+mod utils;
 
+use crate::cursor_control::CursorControl;
+use crate::keybinds::KeyBinds;
 use crate::movement_system::MovementSystemPlugin;
 use crate::player::PlayerPlugin;
 use bevy::prelude::*;
@@ -12,9 +17,11 @@ const BASE_SPEED: f32 = 500.;
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
+        .init_resource::<KeyBinds>()
         .add_plugins(MovementSystemPlugin)
         .add_plugins(PlayerPlugin)
         .add_systems(Startup, setup)
+        .add_plugins(CursorControl)
         .run();
 }
 
@@ -36,10 +43,5 @@ fn setup(
             ..default()
         },
         Transform::from_xyz(4.0, 8.0, 4.0),
-    ));
-
-    commands.spawn((
-        Camera3d::default(),
-        Transform::from_xyz(-2.5, 4.5, 9.0).looking_at(Vec3::ZERO, Vec3::Y),
     ));
 }

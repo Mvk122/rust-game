@@ -10,6 +10,7 @@ pub struct MovementSystemPlugin;
 #[derive(Component)]
 pub struct Velocity(pub(crate) Vec3);
 
+// All GravityAffected Components need to also have Physics
 #[derive(Component)]
 pub struct GravityAffected;
 
